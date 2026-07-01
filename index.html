@@ -433,6 +433,19 @@
     return text.match(/\d{3}-\d{2,3}-\d{4}/g) || [];
   }
 
+  function extractProductTokens(text) {
+    const tokenPattern = /(^|\D)(\d{3}-\d{2,3}-\d{4}|\d{9,12})(?=\D|$)/g;
+    return [...text.matchAll(tokenPattern)].map(match => match[2]);
+  }
+
+  function findInvalidNumberRuns(text, validTokens) {
+    let rest = text;
+    validTokens.forEach(token => {
+      rest = rest.replace(token, ' ');
+    });
+    return rest.match(/\d{4,}/g) || [];
+  }
+
   function convert() {
     const input = document.getElementById('input').value.trim();
     if (!input) return;
@@ -445,6 +458,32 @@
     const seen = new Set();
 
     if (currentMode === 'to-or' || currentMode === 'to-hinban') {
+      const tokens = extractProductTokens(input);
+
+      tokens.forEach(token => {
+        if (token.includes('-')) {
+          if (seen.has(token)) { dups.push(token); return; }
+          seen.add(token);
+          results.push(token);
+          return;
+        }
+
+        const { result, warning } = convertToHinban(token);
+        if (warning) { errors.push(token); return; }
+        if (seen.has(result)) { dups.push(result); return; }
+        seen.add(result);
+        results.push(result);
+      });
+
+      findInvalidNumberRuns(input, tokens).forEach(num => errors.push(num));
+
+      if (currentMode === 'to-or') {
+        renderOutput(results.join(' OR '), results.length, dups.length, errors, dups);
+      } else {
+        renderOutput(results.join('\n'), results.length, dups.length, errors, dups);
+      }
+      return;
+
       const lines = input.split('\n');
       lines.forEach(line => {
         const trimmed = line.trim();
