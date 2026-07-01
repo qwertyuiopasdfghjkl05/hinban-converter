@@ -36,6 +36,13 @@
     margin-top: 6px;
   }
 
+  .header-note {
+    max-width: 620px;
+    margin: 12px auto 0;
+    color: #777;
+    line-height: 1.7;
+  }
+
   .card {
     background: #fff;
     border-radius: 12px;
@@ -43,6 +50,81 @@
     padding: 32px;
     width: 100%;
     max-width: 680px;
+  }
+
+  .help-box {
+    margin: -4px 0 18px;
+    display: flex;
+    justify-content: flex-end;
+    position: relative;
+  }
+
+  .help-toggle {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid #ddd;
+    background: #fff;
+    color: #777;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .help-toggle:hover {
+    background: #f5f5f5;
+    color: #333;
+  }
+
+  .help-panel {
+    display: none;
+    position: absolute;
+    top: 36px;
+    right: 0;
+    width: min(460px, calc(100vw - 48px));
+    background: #fff;
+    border: 1px solid #e8e8e8;
+    border-radius: 8px;
+    padding: 16px;
+    color: #555;
+    font-size: 12px;
+    line-height: 1.8;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    z-index: 10;
+  }
+
+  .help-panel.open { display: block; }
+
+  .help-title {
+    font-size: 12px;
+    color: #222;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .help-example-title {
+    margin-top: 12px;
+    color: #333;
+    font-weight: 700;
+  }
+
+  .help-label {
+    margin-top: 8px;
+    color: #777;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .help-example {
+    margin-top: 4px;
+    padding: 10px;
+    background: #fafafa;
+    border: 1px solid #eee;
+    border-radius: 6px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    color: #333;
+    word-break: break-all;
   }
 
   .mode-tabs {
@@ -283,6 +365,7 @@
 <header>
   <h1>品番変換ツール</h1>
   <p>数字羅列とハイフンあり品番の相互変換</p>
+  <p class="header-note">商品名や記号が混じっていても、スペース・記号・改行で区切られた品番を自動で抜き出して変換できます。</p>
 </header>
 
 <div class="card">
@@ -291,6 +374,24 @@
     <button class="mode-tab active" onclick="setMode('to-or')">OR検索形式に</button>
     <button class="mode-tab" onclick="setMode('to-hinban')">ハイフンありへ</button>
     <button class="mode-tab" onclick="setMode('strip')">ハイフンなしへ</button>
+  </div>
+
+  <div class="help-box" id="helpBox">
+    <button class="help-toggle" type="button" aria-label="使い方を表示" onclick="toggleHelp()">?</button>
+    <div class="help-panel" id="helpPanel">
+      <div class="help-title">使い方の例</div>
+      <div>各品番ごとにスペースや / などの記号で区切られている、もしくは改行されていれば品番を抽出できます。</div>
+      <div class="help-example-title">・12桁でも最後の2桁を無視して10桁品番として変換します</div>
+      <div class="help-label">変換前</div>
+      <div class="help-example">578013017349</div>
+      <div class="help-label">変換後</div>
+      <div class="help-example">578-13-0173</div>
+      <div class="help-example-title">・商品名や記号（、や？など）が混ざっていても大丈夫です</div>
+      <div class="help-label">変換前</div>
+      <div class="help-example">アシメギャザートップス 578013017349 / レイヤード風トップス：5780130194、5870130156</div>
+      <div class="help-label">変換後</div>
+      <div class="help-example">578-13-0173<br>578-13-0194<br>587-13-0156</div>
+    </div>
   </div>
 
   <div class="desc-box" id="descBox"></div>
@@ -325,7 +426,7 @@
 
   <!-- エラー通知 -->
   <div class="notice-block notice-error" id="errorList">
-    <div class="notice-title">✕ 変換できなかった品番</div>
+    <div class="notice-title">✕ 確認が必要な品番</div>
     <div id="errorItems"></div>
   </div>
 
@@ -348,9 +449,9 @@
       outputPlaceholder: '変換結果がここに表示されます\n\n例：\n578-14-0186\n281-127-9648\n654-13-0025'
     },
     'strip': {
-      descMain: 'ハイフンあり品番を、元の数字羅列の状態に戻します。',
-      descSub: 'ハイフンを除去し、変換前の数字のみの状態に復元します。',
-      placeholder: 'ハイフンあり品番を貼り付けてください（複数可）\n\n例：\n578-14-0186\n281-127-9648\n654-13-0025',
+      descMain: 'ハイフンあり品番・ハイフンなし品番を、数字羅列の状態に戻します。',
+      descSub: '混在した品番をまとめて貼り付けても、ハイフンなしの数字形式に整形します。',
+      placeholder: '品番を貼り付けてください（複数可）\n\n例：\n5780140186 498135955741、578-13-0044 / 6540130025',
       outputPlaceholder: '変換結果がここに表示されます\n\n例：\n5780140186\n2811279648\n6540130025'
     }
   };
@@ -377,7 +478,25 @@
     clearOutput();
   }
 
-  // 数字列の正規化：9〜11桁を許容し、11桁の場合は末尾2桁を除去して9桁に
+  function toggleHelp() {
+    document.getElementById('helpPanel').classList.toggle('open');
+  }
+
+  document.addEventListener('click', (event) => {
+    const helpBox = document.getElementById('helpBox');
+    const helpPanel = document.getElementById('helpPanel');
+    if (!helpBox.contains(event.target)) {
+      helpPanel.classList.remove('open');
+    }
+  });
+
+  // 数字列の正規化：11桁・12桁の場合は先頭10桁だけを使う
+  function normalizeInputText(text) {
+    return text
+      .replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0))
+      .replace(/[－ー―‐‑‒–—ｰ]/g, '-');
+  }
+
   function normalizeNum(s) {
     if (s.length === 11 || s.length === 12) {
       // 末尾2桁を無視して10桁扱い
@@ -429,12 +548,8 @@
     return null;
   }
 
-  function extractHinban(text) {
-    return text.match(/\d{3}-\d{2,3}-\d{4}/g) || [];
-  }
-
   function extractProductTokens(text) {
-    const tokenPattern = /(^|\D)(\d{3}-\d{2,3}-\d{4}|\d{9,12})(?=\D|$)/g;
+    const tokenPattern = /(^|\D)(\d{3}-\d{2,3}-\d{4}|\d{10,12})(?=\D|$)/g;
     return [...text.matchAll(tokenPattern)].map(match => match[2]);
   }
 
@@ -447,7 +562,7 @@
   }
 
   function convert() {
-    const input = document.getElementById('input').value.trim();
+    const input = normalizeInputText(document.getElementById('input').value).trim();
     if (!input) return;
 
     clearNotices();
@@ -470,6 +585,7 @@
 
         const { result, warning } = convertToHinban(token);
         if (warning) { errors.push(token); return; }
+        if (token.length === 11) { errors.push(`${token} は11桁です。先頭10桁だけで変換しました`); }
         if (seen.has(result)) { dups.push(result); return; }
         seen.add(result);
         results.push(result);
@@ -484,59 +600,31 @@
       }
       return;
 
-      const lines = input.split('\n');
-      lines.forEach(line => {
-        const trimmed = line.trim();
-        if (!trimmed) return;
-
-        // ハイフンあり品番が含まれる行
-        const hinban = trimmed.match(/\d{3}-\d{2,3}-\d{4}/);
-        if (hinban) {
-          const h = hinban[0];
-          if (seen.has(h)) { dups.push(h); return; }
-          seen.add(h);
-          results.push(h);
-          return;
-        }
-
-        // ハイフンなし数字列（9〜12桁を対象）
-        const numMatch = trimmed.match(/\b(\d{9,12})\b/);
-        if (numMatch) {
-          const { result, warning } = convertToHinban(numMatch[1]);
-          if (warning) { errors.push(numMatch[1]); return; }
-          if (seen.has(result)) { dups.push(result); return; }
-          seen.add(result);
-          results.push(result);
-          return;
-        }
-
-        // 数字が含まれているが変換できない場合
-        const anyNum = trimmed.match(/\d{4,}/);
-        if (anyNum) {
-          errors.push(trimmed);
-        }
-      });
-
-      if (currentMode === 'to-or') {
-        renderOutput(results.join(' OR '), results.length, dups.length, errors, dups);
-      } else {
-        renderOutput(results.join('\n'), results.length, dups.length, errors, dups);
-      }
-
     } else if (currentMode === 'strip') {
-      const hinbans = extractHinban(input);
-      if (hinbans.length === 0) {
-        errors.push('ハイフンあり品番が見つかりませんでした');
+      const tokens = extractProductTokens(input);
+      if (tokens.length === 0) {
+        errors.push('品番が見つかりませんでした');
         renderOutput('', 0, 0, errors, []);
         return;
       }
-      hinbans.forEach(h => {
-        const raw = hinbanToRaw(h);
-        if (!raw) { errors.push(h); return; }
-        if (seen.has(raw)) { dups.push(h); return; }
+      tokens.forEach(token => {
+        let raw = null;
+
+        if (token.includes('-')) {
+          raw = hinbanToRaw(token);
+        } else {
+          const { result, warning } = convertToHinban(token);
+          if (warning) { errors.push(token); return; }
+          if (token.length === 11) { errors.push(`${token} は11桁です。先頭10桁だけで変換しました`); }
+          raw = hinbanToRaw(result);
+        }
+
+        if (!raw) { errors.push(token); return; }
+        if (seen.has(raw)) { dups.push(token); return; }
         seen.add(raw);
         results.push(raw);
       });
+      findInvalidNumberRuns(input, tokens).forEach(num => errors.push(num));
       renderOutput(results.join('\n'), results.length, dups.length, errors, dups);
     }
   }
