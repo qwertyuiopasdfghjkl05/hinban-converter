@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>品番変換ツール</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', 'Hiragino Sans', 'Yu Gothic UI', sans-serif;
+    background: #f5f5f3;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 16px;
+    color: #1a1a1a;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 36px;
+  }
+
+  header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #111;
+  }
+
+  header p {
+    font-size: 13px;
+    color: #999;
+    margin-top: 6px;
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #e8e8e8;
+    padding: 32px;
+    width: 100%;
+    max-width: 680px;
+  }
+
+  .mode-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+
+  .mode-tab {
+    padding: 11px 8px;
+    border: none;
+    background: #fafafa;
+    color: #888;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    border-right: 1px solid #e0e0e0;
+    font-family: inherit;
+    line-height: 1.4;
+    text-align: center;
+  }
+
+  .mode-tab:last-child { border-right: none; }
+
+  .mode-tab.active {
+    background: #111;
+    color: #fff;
+    font-weight: 600;
+  }
+
+  .mode-tab:hover:not(.active) {
+    background: #f0f0f0;
+    color: #333;
+  }
+
+  .desc-box {
+    background: #fafafa;
+    border: 1px solid #ebebeb;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-bottom: 24px;
+    line-height: 1.7;
+  }
+
+  .desc-box .desc-main {
+    font-size: 13px;
+    color: #333;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+
+  .desc-box .desc-sub {
+    font-size: 12px;
+    color: #888;
+  }
+
+  label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: #aaa;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  textarea {
+    width: 100%;
+    height: 150px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 14px;
+    font-size: 13px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    resize: vertical;
+    color: #222;
+    background: #fff;
+    transition: border-color 0.15s;
+    line-height: 1.8;
+  }
+
+  textarea:focus {
+    outline: none;
+    border-color: #999;
+  }
+
+  textarea::placeholder {
+    color: #ccc;
+    font-family: 'Segoe UI', 'Hiragino Sans', sans-serif;
+    font-size: 12px;
+    line-height: 1.8;
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+    margin-bottom: 28px;
+  }
+
+  .btn {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+    letter-spacing: 0.2px;
+  }
+
+  .btn-dark {
+    background: #111;
+    color: #fff;
+  }
+  .btn-dark:hover { background: #333; }
+
+  .btn-ghost {
+    background: transparent;
+    color: #999;
+    border: 1px solid #e0e0e0;
+  }
+  .btn-ghost:hover { background: #f5f5f5; color: #555; }
+
+  .divider {
+    border: none;
+    border-top: 1px solid #f0f0f0;
+    margin-bottom: 24px;
+  }
+
+  .output-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .btn-copy {
+    padding: 6px 16px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    background: #fff;
+    color: #555;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .btn-copy:hover { background: #f5f5f5; }
+  .btn-copy.copied { background: #111; color: #fff; border-color: #111; }
+
+  .output-box {
+    width: 100%;
+    min-height: 100px;
+    background: #fafafa;
+    border: 1px solid #e8e8e8;
+    border-radius: 8px;
+    padding: 16px;
+    font-size: 13px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    color: #222;
+    line-height: 1.9;
+    word-break: break-all;
+    white-space: pre-wrap;
+  }
+
+  .output-box.empty {
+    color: #ccc;
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 12px;
+    line-height: 1.8;
+  }
+
+  .stats {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+
+  .stat {
+    font-size: 11px;
+    color: #aaa;
+    background: #f5f5f5;
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+
+  .stat strong { color: #555; }
+
+  /* 通知ブロック共通 */
+  .notice-block {
+    margin-top: 12px;
+    border-radius: 6px;
+    padding: 12px 16px;
+    font-size: 12px;
+    line-height: 1.9;
+    display: none;
+  }
+
+  .notice-block .notice-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .notice-block .notice-item {
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 12px;
+  }
+
+  /* エラー */
+  .notice-error {
+    background: #fdf3f2;
+    border-left: 3px solid #e74c3c;
+    color: #c0392b;
+  }
+
+  /* 重複 */
+  .notice-dup {
+    background: #fdf8f0;
+    border-left: 3px solid #e6a817;
+    color: #946c00;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>品番変換ツール</h1>
+  <p>数字羅列とハイフンあり品番の相互変換</p>
+</header>
+
+<div class="card">
+
+  <div class="mode-tabs">
+    <button class="mode-tab active" onclick="setMode('to-or')">OR検索形式に</button>
+    <button class="mode-tab" onclick="setMode('to-hinban')">ハイフンありへ</button>
+    <button class="mode-tab" onclick="setMode('strip')">ハイフンなしへ</button>
+  </div>
+
+  <div class="desc-box" id="descBox"></div>
+
+  <label>入力</label>
+  <textarea id="input"></textarea>
+
+  <div class="btn-row">
+    <button class="btn btn-dark" onclick="convert()">変換する</button>
+    <button class="btn btn-ghost" onclick="clearAll()">クリア</button>
+  </div>
+
+  <hr class="divider">
+
+  <div class="output-header">
+    <label style="margin:0;">出力</label>
+    <button class="btn-copy" id="copyBtn" onclick="copyOutput()">コピー</button>
+  </div>
+
+  <div id="output" class="output-box empty"></div>
+
+  <div class="stats" id="stats" style="display:none;">
+    <div class="stat">変換件数：<strong id="statCount">0</strong> 件</div>
+    <div class="stat">重複除外：<strong id="statDup">0</strong> 件</div>
+  </div>
+
+  <!-- 重複通知 -->
+  <div class="notice-block notice-dup" id="dupList">
+    <div class="notice-title">⚠ 重複していた品番</div>
+    <div id="dupItems"></div>
+  </div>
+
+  <!-- エラー通知 -->
+  <div class="notice-block notice-error" id="errorList">
+    <div class="notice-title">✕ 変換できなかった品番</div>
+    <div id="errorItems"></div>
+  </div>
+
+</div>
+
+<script>
+  let currentMode = 'to-or';
+
+  const modeConfig = {
+    'to-or': {
+      descMain: 'Windowsのエクスプローラーで複数の品番をまとめて検索するための形式に変換します。',
+      descSub: '品番をまとめて貼り付けるだけで、フォルダ内のファイルを一度に検索できる形式に整形します。ハイフンなしの数字が混じっていても自動でハイフンを付けて変換します。',
+      placeholder: '品番を貼り付けてください（複数可）\n\n例：\n5780140186\n578-13-0044\n6540130025',
+      outputPlaceholder: '変換結果がここに表示されます\n\n例：\n578-14-0186 OR 578-13-0044 OR 654-13-0025\n\nWindowsのエクスプローラー検索欄にそのまま貼り付けて使えます'
+    },
+    'to-hinban': {
+      descMain: 'ハイフンなしの数字羅列を、ハイフンあり品番に変換します。',
+      descSub: '4桁目が「0」の場合は削除してXXX-XX-XXXX形式に、「1」の場合はそのままXXX-1XX-XXXX形式に変換します。',
+      placeholder: '数字羅列を貼り付けてください（複数可）\n\n例：\n5780140186\n2811279648\n6540130025',
+      outputPlaceholder: '変換結果がここに表示されます\n\n例：\n578-14-0186\n281-127-9648\n654-13-0025'
+    },
+    'strip': {
+      descMain: 'ハイフンあり品番を、元の数字羅列の状態に戻します。',
+      descSub: 'ハイフンを除去し、変換前の数字のみの状態に復元します。',
+      placeholder: 'ハイフンあり品番を貼り付けてください（複数可）\n\n例：\n578-14-0186\n281-127-9648\n654-13-0025',
+      outputPlaceholder: '変換結果がここに表示されます\n\n例：\n5780140186\n2811279648\n6540130025'
+    }
+  };
+
+  function renderDesc(mode) {
+    const c = modeConfig[mode];
+    document.getElementById('descBox').innerHTML = `
+      <div class="desc-main">${c.descMain}</div>
+      <div class="desc-sub">${c.descSub}</div>
+    `;
+    document.getElementById('input').placeholder = c.placeholder;
+    const outputEl = document.getElementById('output');
+    outputEl.textContent = c.outputPlaceholder;
+    outputEl.classList.add('empty');
+  }
+
+  function setMode(mode) {
+    currentMode = mode;
+    document.querySelectorAll('.mode-tab').forEach((t, i) => {
+      const modes = ['to-or', 'to-hinban', 'strip'];
+      t.classList.toggle('active', modes[i] === mode);
+    });
+    renderDesc(mode);
+    clearOutput();
+  }
+
+  // 数字列の正規化：9〜11桁を許容し、11桁の場合は末尾2桁を除去して9桁に
+  function normalizeNum(s) {
+    if (s.length === 11 || s.length === 12) {
+      // 末尾2桁を無視して10桁扱い
+      return s.slice(0, 10);
+    }
+    return s;
+  }
+
+  function convertToHinban(rawNum) {
+    const s = normalizeNum(rawNum);
+    const fourth = s[3];
+    const original = rawNum !== s ? `${rawNum}（末尾を除いて変換）` : null;
+
+    if (fourth === '0') {
+      const body = s.slice(0, 3) + s.slice(4);
+      if (body.length === 9) {
+        return {
+          result: `${body.slice(0,3)}-${body.slice(3,5)}-${body.slice(5)}`,
+          warning: null,
+          trimmed: original
+        };
+      }
+      return { result: null, warning: rawNum, trimmed: null };
+    }
+
+    if (fourth === '1') {
+      if (s.length === 10) {
+        return {
+          result: `${s.slice(0,3)}-${s.slice(3,6)}-${s.slice(6)}`,
+          warning: null,
+          trimmed: original
+        };
+      }
+      return { result: null, warning: rawNum, trimmed: null };
+    }
+
+    return { result: null, warning: rawNum, trimmed: null };
+  }
+
+  function hinbanToRaw(hinban) {
+    const parts = hinban.split('-');
+    if (parts.length === 3) {
+      const a = parts[0];
+      const b = parts[1];
+      const c = parts[2];
+      if (b.length === 2) return a + '0' + b + c;
+      if (b.length === 3) return a + b + c;
+    }
+    return null;
+  }
+
+  function extractHinban(text) {
+    return text.match(/\d{3}-\d{2,3}-\d{4}/g) || [];
+  }
+
+  function convert() {
+    const input = document.getElementById('input').value.trim();
+    if (!input) return;
+
+    clearNotices();
+
+    let results = [];
+    let errors = [];
+    let dups = [];
+    const seen = new Set();
+
+    if (currentMode === 'to-or' || currentMode === 'to-hinban') {
+      const lines = input.split('\n');
+      lines.forEach(line => {
+        const trimmed = line.trim();
+        if (!trimmed) return;
+
+        // ハイフンあり品番が含まれる行
+        const hinban = trimmed.match(/\d{3}-\d{2,3}-\d{4}/);
+        if (hinban) {
+          const h = hinban[0];
+          if (seen.has(h)) { dups.push(h); return; }
+          seen.add(h);
+          results.push(h);
+          return;
+        }
+
+        // ハイフンなし数字列（9〜12桁を対象）
+        const numMatch = trimmed.match(/\b(\d{9,12})\b/);
+        if (numMatch) {
+          const { result, warning } = convertToHinban(numMatch[1]);
+          if (warning) { errors.push(numMatch[1]); return; }
+          if (seen.has(result)) { dups.push(result); return; }
+          seen.add(result);
+          results.push(result);
+          return;
+        }
+
+        // 数字が含まれているが変換できない場合
+        const anyNum = trimmed.match(/\d{4,}/);
+        if (anyNum) {
+          errors.push(trimmed);
+        }
+      });
+
+      if (currentMode === 'to-or') {
+        renderOutput(results.join(' OR '), results.length, dups.length, errors, dups);
+      } else {
+        renderOutput(results.join('\n'), results.length, dups.length, errors, dups);
+      }
+
+    } else if (currentMode === 'strip') {
+      const hinbans = extractHinban(input);
+      if (hinbans.length === 0) {
+        errors.push('ハイフンあり品番が見つかりませんでした');
+        renderOutput('', 0, 0, errors, []);
+        return;
+      }
+      hinbans.forEach(h => {
+        const raw = hinbanToRaw(h);
+        if (!raw) { errors.push(h); return; }
+        if (seen.has(raw)) { dups.push(h); return; }
+        seen.add(raw);
+        results.push(raw);
+      });
+      renderOutput(results.join('\n'), results.length, dups.length, errors, dups);
+    }
+  }
+
+  function renderOutput(text, count, dupCount, errors, dups) {
+    const outputEl = document.getElementById('output');
+    const statsEl = document.getElementById('stats');
+
+    if (text) {
+      outputEl.textContent = text;
+      outputEl.classList.remove('empty');
+    } else {
+      outputEl.textContent = modeConfig[currentMode].outputPlaceholder;
+      outputEl.classList.add('empty');
+    }
+
+    document.getElementById('statCount').textContent = count;
+    document.getElementById('statDup').textContent = dupCount;
+    statsEl.style.display = 'flex';
+
+    // 重複表示
+    if (dups.length > 0) {
+      const dupList = document.getElementById('dupList');
+      const dupItems = document.getElementById('dupItems');
+      dupItems.innerHTML = dups.map(d => `<div class="notice-item">${d}</div>`).join('');
+      dupList.style.display = 'block';
+    }
+
+    // エラー表示
+    if (errors.length > 0) {
+      const errorList = document.getElementById('errorList');
+      const errorItems = document.getElementById('errorItems');
+      errorItems.innerHTML = errors.map(e => `<div class="notice-item">${e}</div>`).join('');
+      errorList.style.display = 'block';
+    }
+  }
+
+  function copyOutput() {
+    const outputEl = document.getElementById('output');
+    if (outputEl.classList.contains('empty')) return;
+    const text = outputEl.textContent;
+
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById('copyBtn');
+      btn.textContent = 'コピーしました';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = 'コピー';
+        btn.classList.remove('copied');
+      }, 2000);
+    });
+  }
+
+  function clearNotices() {
+    document.getElementById('dupList').style.display = 'none';
+    document.getElementById('errorList').style.display = 'none';
+    document.getElementById('dupItems').innerHTML = '';
+    document.getElementById('errorItems').innerHTML = '';
+  }
+
+  function clearAll() {
+    document.getElementById('input').value = '';
+    clearOutput();
+  }
+
+  function clearOutput() {
+    const outputEl = document.getElementById('output');
+    outputEl.textContent = modeConfig[currentMode].outputPlaceholder;
+    outputEl.classList.add('empty');
+    document.getElementById('stats').style.display = 'none';
+    clearNotices();
+  }
+
+  // 初期表示
+  renderDesc('to-or');
+</script>
+</body>
+</html>
