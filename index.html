@@ -403,7 +403,7 @@
       return { result: null, warning: rawNum, trimmed: null };
     }
 
-    if (fourth === '1') {
+    if (fourth !== '0') {
       if (s.length === 10) {
         return {
           result: `${s.slice(0,3)}-${s.slice(3,6)}-${s.slice(6)}`,
